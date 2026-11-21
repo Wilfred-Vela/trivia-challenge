@@ -31,12 +31,29 @@ def choose_category(bank, input_fn, output_fn):
         output_fn(game.no_questions_message(category))
 
 
-def play_round(questions, category, input_fn, output_fn):
+def choose_difficulty(bank, category, input_fn, output_fn):
+    """Show the difficulty menu for ``category`` until the player picks a
+    level that has questions there (R14, R18). Returns the level, or None if
+    the player chose to go back to the category menu."""
+    while True:
+        output_fn("")
+        output_fn(game.format_difficulty_menu(category))
+        difficulty = ask(game.DIFFICULTY_PROMPT, game.parse_difficulty,
+                         game.DIFFICULTY_ERROR, input_fn, output_fn)
+        if difficulty == game.BACK:
+            return None
+        if bank.questions_in(category, difficulty):
+            return difficulty
+        output_fn(game.no_questions_at_difficulty_message(category, difficulty))
+
+
+def play_round(questions, category, difficulty, input_fn, output_fn):
     """Ask every question once and return the round's Score."""
     score = game.Score()
     total = len(questions)
     output_fn("")
     output_fn(game.category_banner(category))
+    output_fn(game.difficulty_banner(difficulty))
     for number, question in enumerate(questions, start=1):
         output_fn("")
         output_fn(game.format_question(question, number, total))
@@ -52,14 +69,20 @@ def play_round(questions, category, input_fn, output_fn):
 
 def run(bank, input_fn=input, output_fn=print, shuffle=random.shuffle):
     """Play rounds until the player declines or input ends. Returns exit code 0.
-    Each round starts by choosing a category from ``bank`` (R9, R7)."""
+    Each round starts by choosing a category from ``bank`` and then a
+    difficulty (R9, R14, R7); going back from the difficulty menu shows the
+    category menu again."""
     output_fn("Welcome to Trivia Challenge!")
     try:
         while True:
             category = choose_category(bank, input_fn, output_fn)
-            round_questions = bank.questions_in(category)
+            difficulty = choose_difficulty(bank, category, input_fn, output_fn)
+            if difficulty is None:
+                continue
+            round_questions = bank.questions_in(category, difficulty)
             shuffle(round_questions)
-            play_round(round_questions, category, input_fn, output_fn)
+            play_round(round_questions, category, difficulty,
+                       input_fn, output_fn)
             again = ask("Play again? (y/n): ", game.parse_play_again,
                         "Please type y or n.", input_fn, output_fn)
             if not again:
