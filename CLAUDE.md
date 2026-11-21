@@ -7,8 +7,10 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
 - Python 3 standard library only. Nothing to install, no API keys, no network.
 - Must run with one command: `python3 -m trivia`.
 - Questions live in `trivia/questions.json`: an object with a declared
-  `categories` list and `questions` that each name one category (format in
-  `spec.md`, rationale in ADR 0002).
+  `categories` list and `questions` that each name one category and one
+  difficulty (format in `spec.md`, rationale in ADRs 0002 and 0003).
+- The difficulty levels (Easy, Medium, Hard) are fixed in `trivia/game.py`,
+  not in the question file (ADR 0003).
 
 ## Commands
 - Run the game: `python3 -m trivia`
@@ -24,6 +26,10 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
 
 ## Working rules
 - Keep logic separate from I/O so it can be tested without a terminal.
+- Scripted test input follows the prompt order (category, difficulty,
+  answers, play again). If you add, remove or reorder a prompt, update the
+  subprocess test's stdin in `tests/test_cli.py` and every `run_game(...)` /
+  `Script(...)` call that drives a full game.
 - When adding a requirement, add it to `spec.md` and add tests named with its ID.
 - Commit in small steps; messages say what changed and why.
 - If a requirement is unclear, ask the owner before writing code.
