@@ -16,10 +16,27 @@ def ask(prompt, parse, error, input_fn, output_fn):
         output_fn(error)
 
 
-def play_round(questions, input_fn, output_fn):
+def choose_category(bank, input_fn, output_fn):
+    """Show the category menu until the player picks one that has questions
+    (R9, R12). Returns the chosen category name."""
+    categories = bank.categories
+    while True:
+        output_fn("")
+        output_fn(game.format_category_menu(categories))
+        category = ask(game.category_prompt(categories),
+                       lambda text: game.parse_category(text, categories),
+                       game.category_error(categories), input_fn, output_fn)
+        if bank.questions_in(category):
+            return category
+        output_fn(game.no_questions_message(category))
+
+
+def play_round(questions, category, input_fn, output_fn):
     """Ask every question once and return the round's Score."""
     score = game.Score()
     total = len(questions)
+    output_fn("")
+    output_fn(game.category_banner(category))
     for number, question in enumerate(questions, start=1):
         output_fn("")
         output_fn(game.format_question(question, number, total))
@@ -33,14 +50,16 @@ def play_round(questions, input_fn, output_fn):
     return score
 
 
-def run(questions, input_fn=input, output_fn=print, shuffle=random.shuffle):
-    """Play rounds until the player declines or input ends. Returns exit code 0."""
+def run(bank, input_fn=input, output_fn=print, shuffle=random.shuffle):
+    """Play rounds until the player declines or input ends. Returns exit code 0.
+    Each round starts by choosing a category from ``bank`` (R9, R7)."""
     output_fn("Welcome to Trivia Challenge!")
     try:
         while True:
-            round_questions = list(questions)
+            category = choose_category(bank, input_fn, output_fn)
+            round_questions = bank.questions_in(category)
             shuffle(round_questions)
-            play_round(round_questions, input_fn, output_fn)
+            play_round(round_questions, category, input_fn, output_fn)
             again = ask("Play again? (y/n): ", game.parse_play_again,
                         "Please type y or n.", input_fn, output_fn)
             if not again:
@@ -58,8 +77,8 @@ def main(argv=None, input_fn=input, output_fn=print):
                         help="path to a JSON question file")
     args = parser.parse_args(argv)
     try:
-        questions = game.load_questions(args.questions)
+        bank = game.load_bank(args.questions)
     except game.QuestionFileError as e:
         output_fn(f"Could not load questions: {e}")
         return 1
-    return run(questions, input_fn, output_fn)
+    return run(bank, input_fn, output_fn)
