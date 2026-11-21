@@ -9,3 +9,10 @@ Students and people who enjoy trivia often want a simple way to test their gener
 - R5: The game must keep track of the player's score.
 - R6: The game must display the final score when all questions have been answered.
 - R7: The player must be able to play again without restarting the program.
+
+# Round 2 requirements
+- R8: The game must organize trivia questions into categories, such as Science, History, Sports, and Geography.
+- R9: The player must be able to select a category before starting a game.
+- R10: The game must only display questions belonging to the selected category.
+- R11: The game must display the selected category during gameplay.
+- R12: The game must handle categories that have no available questions by displaying a helpful message.
