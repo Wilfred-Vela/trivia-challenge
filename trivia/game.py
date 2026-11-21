@@ -5,6 +5,13 @@ import os
 from dataclasses import dataclass
 
 LETTERS = ("A", "B", "C", "D")
+# Fixed in the program, not declared in the question file (ADR 0003).
+DIFFICULTIES = ("Easy", "Medium", "Hard")
+# Returned by parse_difficulty() for the menu's "Back to categories" option.
+BACK = "Back"
+DIFFICULTY_PROMPT = f"Difficulty (1-{len(DIFFICULTIES) + 1}): "
+DIFFICULTY_ERROR = (f"Please type a number from 1 to {len(DIFFICULTIES) + 1} "
+                    "or a difficulty name.")
 DEFAULT_QUESTIONS_PATH = os.path.join(os.path.dirname(__file__), "questions.json")
 
 
@@ -18,6 +25,7 @@ class Question:
     choices: list
     answer_index: int
     category: str = ""
+    difficulty: str = ""
 
 
 @dataclass
@@ -26,9 +34,11 @@ class QuestionBank:
     categories: list
     questions: list
 
-    def questions_in(self, category):
-        """A new list of the questions in ``category``, in file order."""
-        return [q for q in self.questions if q.category == category]
+    def questions_in(self, category, difficulty=None):
+        """A new list of the questions in ``category`` (and, if given, at
+        ``difficulty``), in file order."""
+        return [q for q in self.questions if q.category == category
+                and (difficulty is None or q.difficulty == difficulty)]
 
 
 def load_bank(path):
@@ -79,6 +89,11 @@ def _parse_question(n, item, categories):
         raise QuestionFileError(
             f"question {n}: 'category' must be one of {', '.join(categories)}"
             f" (got {category!r})")
+    difficulty = item.get("difficulty")
+    if difficulty not in DIFFICULTIES:
+        raise QuestionFileError(
+            f"question {n}: 'difficulty' must be one of {', '.join(DIFFICULTIES)}"
+            f" (got {difficulty!r})")
     text = item.get("question")
     choices = item.get("choices")
     answer = item.get("answer")
@@ -90,7 +105,7 @@ def _parse_question(n, item, categories):
     if not isinstance(answer, str) or answer.strip().upper() not in LETTERS:
         raise QuestionFileError(f"question {n}: 'answer' must be one of A, B, C, D")
     return Question(text, list(choices), LETTERS.index(answer.strip().upper()),
-                    category)
+                    category, difficulty)
 
 
 def format_category_menu(categories):
@@ -129,12 +144,46 @@ def no_questions_message(category):
             "Please choose another category.")
 
 
+def format_difficulty_menu(category):
+    """The numbered difficulty list, plus a way back, shown after a category
+    is chosen (R13, R14)."""
+    options = list(DIFFICULTIES) + ["Back to categories"]
+    lines = [f"Choose a difficulty for {category}:"]
+    lines += [f"  {n}) {name}" for n, name in enumerate(options, start=1)]
+    return "\n".join(lines)
+
+
+def parse_difficulty(text):
+    """Map a typed menu number or name (case-insensitive) to a difficulty,
+    BACK for the last option, or None if it matches nothing."""
+    options = DIFFICULTIES + (BACK,)
+    reply = text.strip()
+    if reply.isascii() and reply.isdigit() and 1 <= int(reply) <= len(options):
+        return options[int(reply) - 1]
+    for name in options:
+        if reply.lower() == name.lower():
+            return name
+    return None
+
+
+def difficulty_banner(difficulty):
+    return f"Difficulty: {difficulty}"
+
+
+def no_questions_at_difficulty_message(category, difficulty):
+    return (f"There are no {difficulty} questions in {category} yet.\n"
+            "Please choose another difficulty or go back.")
+
+
 def format_question(question, number, total):
     """Return the question header, text and lettered choices as one string.
-    The header names the question's category when it has one (R11)."""
+    The header names the question's category (R11) and difficulty (R17)
+    when it has them."""
     header = f"Question {number} of {total}"
     if question.category:
         header += f" — {question.category}"
+    if question.difficulty:
+        header += f" ({question.difficulty})"
     lines = [header, question.text]
     lines += [f"  {letter}) {choice}" for letter, choice in zip(LETTERS, question.choices)]
     return "\n".join(lines)
