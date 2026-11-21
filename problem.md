@@ -16,3 +16,11 @@ Students and people who enjoy trivia often want a simple way to test their gener
 - R10: The game must only display questions belonging to the selected category.
 - R11: The game must display the selected category during gameplay.
 - R12: The game must handle categories that have no available questions by displaying a helpful message.
+
+# Round 3 requirements
+- R13: The game must offer three difficulty levels: Easy, Medium, and Hard.
+- R14: The player must select a difficulty level after selecting a trivia category and before starting the game.
+- R15: Each trivia question must have an assigned difficulty level.
+- R16: The game must only display questions matching both the selected category and difficulty level.
+- R17: The game must display the selected difficulty level during gameplay.
+- R18: If the selected category has no questions at the chosen difficulty level, the game must display a helpful message and allow the player to choose another difficulty level or category without crashing.
