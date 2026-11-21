@@ -4,12 +4,14 @@ A multiple-choice trivia game that runs in your terminal. It works fully
 offline: no internet connection, account, API key, or installation needed —
 just Python 3 (standard library only).
 
-Questions are grouped into categories (Science, History, Sports, Geography).
-Each game starts by choosing a category, by number or by name; the round then
-asks every question in that category in a random order. Type the letter of your
+Questions are grouped into categories (Science, History, Sports, Geography),
+and each has a difficulty: Easy, Medium, or Hard. Each game starts by choosing
+a category and then a difficulty, by number or by name (the difficulty menu
+also lets you go back to the categories); the round then asks every question
+of that category and difficulty in a random order. Type the letter of your
 answer (A, B, C, or D); the game tells you whether you were right, keeps a
 running score, shows your final score at the end, and asks if you want to play
-again (you choose a category again for the next game).
+again (you choose a category and difficulty again for the next game).
 
 ## Run the game
 
@@ -19,8 +21,8 @@ From the project root:
 python3 -m trivia
 ```
 
-To use your own question file (format, including how to declare categories,
-described in `spec.md`):
+To use your own question file (format, including how to declare categories
+and give each question a difficulty, described in `spec.md`):
 
 ```sh
 python3 -m trivia --questions path/to/questions.json
@@ -34,6 +36,6 @@ python3 -m unittest discover tests
 
 ## Project docs
 
-- `problem.md` — problem statement and requirements R1–R12
+- `problem.md` — problem statement and requirements R1–R18
 - `spec.md` — detailed behaviour, question file format, design
 - `docs/decisions/` — architecture decision records
