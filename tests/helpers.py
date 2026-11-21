@@ -1,16 +1,28 @@
 """Shared helpers for driving the game loop with scripted input."""
 
-from trivia.game import Question
+from trivia.game import Question, QuestionBank
 
 
 def sample_questions():
+    """The Science questions in sample_bank(). Answers: B, C, A."""
     return [
-        Question("What is 2 + 2?", ["3", "4", "5", "6"], 1),
+        Question("What is 2 + 2?", ["3", "4", "5", "6"], 1, "Science"),
         Question("Which planet is known as the Red Planet?",
-                 ["Venus", "Jupiter", "Mars", "Saturn"], 2),
+                 ["Venus", "Jupiter", "Mars", "Saturn"], 2, "Science"),
         Question("What colour do you get by mixing blue and yellow?",
-                 ["Green", "Purple", "Orange", "Brown"], 0),
+                 ["Green", "Purple", "Orange", "Brown"], 0, "Science"),
     ]
+
+
+def history_question():
+    return Question("In which year did humans first land on the Moon?",
+                    ["1965", "1969", "1972", "1959"], 1, "History")
+
+
+def sample_bank():
+    """Menu: 1) Science (3 questions), 2) History (1), 3) Sports (empty)."""
+    return QuestionBank(["Science", "History", "Sports"],
+                        sample_questions() + [history_question()])
 
 
 def no_shuffle(items):
