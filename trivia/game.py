@@ -17,9 +17,21 @@ class Question:
     text: str
     choices: list
     answer_index: int
+    category: str = ""
 
 
-def load_questions(path):
+@dataclass
+class QuestionBank:
+    """Declared categories (in menu order) and every question in the file."""
+    categories: list
+    questions: list
+
+    def questions_in(self, category):
+        """A new list of the questions in ``category``, in file order."""
+        return [q for q in self.questions if q.category == category]
+
+
+def load_bank(path):
     """Read and validate the JSON question file at ``path``."""
     try:
         with open(path, encoding="utf-8") as f:
@@ -28,35 +40,102 @@ def load_questions(path):
         raise QuestionFileError(f"cannot read {path}: {e.strerror or e}") from e
     except json.JSONDecodeError as e:
         raise QuestionFileError(f"{path} is not valid JSON: {e}") from e
-    return parse_questions(data)
+    return parse_bank(data)
 
 
-def parse_questions(data):
-    """Turn decoded JSON into a list of Question, validating every field."""
-    if not isinstance(data, list) or not data:
-        raise QuestionFileError("question file must be a non-empty JSON array")
-    questions = []
-    for n, item in enumerate(data, start=1):
-        if not isinstance(item, dict):
-            raise QuestionFileError(f"question {n}: must be a JSON object")
-        text = item.get("question")
-        choices = item.get("choices")
-        answer = item.get("answer")
-        if not isinstance(text, str) or not text.strip():
-            raise QuestionFileError(f"question {n}: 'question' must be a non-empty string")
-        if (not isinstance(choices, list) or len(choices) != len(LETTERS)
-                or not all(isinstance(c, str) and c.strip() for c in choices)):
-            raise QuestionFileError(f"question {n}: 'choices' must be 4 non-empty strings")
-        if not isinstance(answer, str) or answer.strip().upper() not in LETTERS:
-            raise QuestionFileError(f"question {n}: 'answer' must be one of A, B, C, D")
-        questions.append(Question(text, list(choices),
-                                  LETTERS.index(answer.strip().upper())))
-    return questions
+def parse_bank(data):
+    """Turn decoded JSON into a QuestionBank, validating every field."""
+    if not isinstance(data, dict):
+        raise QuestionFileError(
+            "question file must be a JSON object with 'categories' and "
+            "'questions' keys (see spec.md)")
+    categories = _parse_categories(data.get("categories"))
+    items = data.get("questions")
+    if not isinstance(items, list) or not items:
+        raise QuestionFileError("'questions' must be a non-empty JSON array")
+    questions = [_parse_question(n, item, categories)
+                 for n, item in enumerate(items, start=1)]
+    return QuestionBank(categories, questions)
+
+
+def _parse_categories(categories):
+    if (not isinstance(categories, list) or not categories
+            or not all(isinstance(c, str) and c.strip() for c in categories)):
+        raise QuestionFileError(
+            "'categories' must be a non-empty array of non-empty strings")
+    seen = set()
+    for name in categories:
+        if name.lower() in seen:
+            raise QuestionFileError(f"category '{name}' is listed more than once")
+        seen.add(name.lower())
+    return list(categories)
+
+
+def _parse_question(n, item, categories):
+    if not isinstance(item, dict):
+        raise QuestionFileError(f"question {n}: must be a JSON object")
+    category = item.get("category")
+    if category not in categories:
+        raise QuestionFileError(
+            f"question {n}: 'category' must be one of {', '.join(categories)}"
+            f" (got {category!r})")
+    text = item.get("question")
+    choices = item.get("choices")
+    answer = item.get("answer")
+    if not isinstance(text, str) or not text.strip():
+        raise QuestionFileError(f"question {n}: 'question' must be a non-empty string")
+    if (not isinstance(choices, list) or len(choices) != len(LETTERS)
+            or not all(isinstance(c, str) and c.strip() for c in choices)):
+        raise QuestionFileError(f"question {n}: 'choices' must be 4 non-empty strings")
+    if not isinstance(answer, str) or answer.strip().upper() not in LETTERS:
+        raise QuestionFileError(f"question {n}: 'answer' must be one of A, B, C, D")
+    return Question(text, list(choices), LETTERS.index(answer.strip().upper()),
+                    category)
+
+
+def format_category_menu(categories):
+    """The numbered list of categories shown before each round (R9)."""
+    lines = ["Choose a category:"]
+    lines += [f"  {n}) {name}" for n, name in enumerate(categories, start=1)]
+    return "\n".join(lines)
+
+
+def category_prompt(categories):
+    return f"Category (1-{len(categories)}): "
+
+
+def category_error(categories):
+    return f"Please type a number from 1 to {len(categories)} or a category name."
+
+
+def parse_category(text, categories):
+    """Map a typed menu number or name (case-insensitive) to a category name,
+    or None if it matches nothing."""
+    reply = text.strip()
+    if reply.isascii() and reply.isdigit() and 1 <= int(reply) <= len(categories):
+        return categories[int(reply) - 1]
+    for name in categories:
+        if reply.lower() == name.lower():
+            return name
+    return None
+
+
+def category_banner(category):
+    return f"Category: {category}"
+
+
+def no_questions_message(category):
+    return (f"There are no questions in {category} yet. "
+            "Please choose another category.")
 
 
 def format_question(question, number, total):
-    """Return the question header, text and lettered choices as one string."""
-    lines = [f"Question {number} of {total}", question.text]
+    """Return the question header, text and lettered choices as one string.
+    The header names the question's category when it has one (R11)."""
+    header = f"Question {number} of {total}"
+    if question.category:
+        header += f" — {question.category}"
+    lines = [header, question.text]
     lines += [f"  {letter}) {choice}" for letter, choice in zip(LETTERS, question.choices)]
     return "\n".join(lines)
 

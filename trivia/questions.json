@@ -1,122 +1,219 @@
-[
-  {
-    "question": "What is the capital of France?",
-    "choices": [
-      "Berlin",
-      "Madrid",
-      "Paris",
-      "Rome"
-    ],
-    "answer": "C"
-  },
-  {
-    "question": "Which planet is known as the Red Planet?",
-    "choices": [
-      "Venus",
-      "Mars",
-      "Jupiter",
-      "Mercury"
-    ],
-    "answer": "B"
-  },
-  {
-    "question": "What is the largest ocean on Earth?",
-    "choices": [
-      "Pacific",
-      "Atlantic",
-      "Indian",
-      "Arctic"
-    ],
-    "answer": "A"
-  },
-  {
-    "question": "Who wrote 'Romeo and Juliet'?",
-    "choices": [
-      "Charles Dickens",
-      "Jane Austen",
-      "Mark Twain",
-      "William Shakespeare"
-    ],
-    "answer": "D"
-  },
-  {
-    "question": "What is the chemical symbol for gold?",
-    "choices": [
-      "Ag",
-      "Au",
-      "Gd",
-      "Go"
-    ],
-    "answer": "B"
-  },
-  {
-    "question": "How many continents are there?",
-    "choices": [
-      "5",
-      "6",
-      "7",
-      "8"
-    ],
-    "answer": "C"
-  },
-  {
-    "question": "What is the hardest natural substance?",
-    "choices": [
-      "Diamond",
-      "Quartz",
-      "Iron",
-      "Granite"
-    ],
-    "answer": "A"
-  },
-  {
-    "question": "In which year did humans first land on the Moon?",
-    "choices": [
-      "1965",
-      "1969",
-      "1972",
-      "1959"
-    ],
-    "answer": "B"
-  },
-  {
-    "question": "What is the smallest prime number?",
-    "choices": [
-      "0",
-      "1",
-      "3",
-      "2"
-    ],
-    "answer": "D"
-  },
-  {
-    "question": "Which gas do plants absorb from the air for photosynthesis?",
-    "choices": [
-      "Oxygen",
-      "Nitrogen",
-      "Carbon dioxide",
-      "Hydrogen"
-    ],
-    "answer": "C"
-  },
-  {
-    "question": "What is the longest river in South America?",
-    "choices": [
-      "Amazon",
-      "Paraná",
-      "Orinoco",
-      "Magdalena"
-    ],
-    "answer": "A"
-  },
-  {
-    "question": "How many sides does a hexagon have?",
-    "choices": [
-      "5",
-      "6",
-      "7",
-      "8"
-    ],
-    "answer": "B"
-  }
-]
+{
+  "categories": [
+    "Science",
+    "History",
+    "Sports",
+    "Geography"
+  ],
+  "questions": [
+    {
+      "category": "Science",
+      "question": "Which planet is known as the Red Planet?",
+      "choices": [
+        "Venus",
+        "Mars",
+        "Jupiter",
+        "Mercury"
+      ],
+      "answer": "B"
+    },
+    {
+      "category": "Science",
+      "question": "What is the chemical symbol for gold?",
+      "choices": [
+        "Ag",
+        "Au",
+        "Gd",
+        "Go"
+      ],
+      "answer": "B"
+    },
+    {
+      "category": "Science",
+      "question": "What is the hardest natural substance?",
+      "choices": [
+        "Diamond",
+        "Quartz",
+        "Iron",
+        "Granite"
+      ],
+      "answer": "A"
+    },
+    {
+      "category": "Science",
+      "question": "What is the smallest prime number?",
+      "choices": [
+        "0",
+        "1",
+        "3",
+        "2"
+      ],
+      "answer": "D"
+    },
+    {
+      "category": "Science",
+      "question": "Which gas do plants absorb from the air for photosynthesis?",
+      "choices": [
+        "Oxygen",
+        "Nitrogen",
+        "Carbon dioxide",
+        "Hydrogen"
+      ],
+      "answer": "C"
+    },
+    {
+      "category": "Science",
+      "question": "How many sides does a hexagon have?",
+      "choices": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "answer": "B"
+    },
+    {
+      "category": "History",
+      "question": "Who wrote 'Romeo and Juliet'?",
+      "choices": [
+        "Charles Dickens",
+        "Jane Austen",
+        "Mark Twain",
+        "William Shakespeare"
+      ],
+      "answer": "D"
+    },
+    {
+      "category": "History",
+      "question": "In which year did humans first land on the Moon?",
+      "choices": [
+        "1965",
+        "1969",
+        "1972",
+        "1959"
+      ],
+      "answer": "B"
+    },
+    {
+      "category": "History",
+      "question": "Who was the first President of the United States?",
+      "choices": [
+        "Thomas Jefferson",
+        "Abraham Lincoln",
+        "George Washington",
+        "John Adams"
+      ],
+      "answer": "C"
+    },
+    {
+      "category": "History",
+      "question": "In which year did World War II end?",
+      "choices": [
+        "1945",
+        "1939",
+        "1918",
+        "1950"
+      ],
+      "answer": "A"
+    },
+    {
+      "category": "History",
+      "question": "Which ancient civilization built Machu Picchu?",
+      "choices": [
+        "Aztec",
+        "Maya",
+        "Olmec",
+        "Inca"
+      ],
+      "answer": "D"
+    },
+    {
+      "category": "Sports",
+      "question": "How many players does a soccer team have on the field at once?",
+      "choices": [
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "answer": "C"
+    },
+    {
+      "category": "Sports",
+      "question": "In tennis, what word means a score of zero?",
+      "choices": [
+        "Nil",
+        "Love",
+        "Duck",
+        "Blank"
+      ],
+      "answer": "B"
+    },
+    {
+      "category": "Sports",
+      "question": "How many years apart are the Summer Olympic Games normally held?",
+      "choices": [
+        "4",
+        "2",
+        "3",
+        "5"
+      ],
+      "answer": "A"
+    },
+    {
+      "category": "Sports",
+      "question": "How many points is a touchdown worth in American football?",
+      "choices": [
+        "3",
+        "7",
+        "2",
+        "6"
+      ],
+      "answer": "D"
+    },
+    {
+      "category": "Geography",
+      "question": "What is the capital of France?",
+      "choices": [
+        "Berlin",
+        "Madrid",
+        "Paris",
+        "Rome"
+      ],
+      "answer": "C"
+    },
+    {
+      "category": "Geography",
+      "question": "What is the largest ocean on Earth?",
+      "choices": [
+        "Pacific",
+        "Atlantic",
+        "Indian",
+        "Arctic"
+      ],
+      "answer": "A"
+    },
+    {
+      "category": "Geography",
+      "question": "How many continents are there?",
+      "choices": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "answer": "C"
+    },
+    {
+      "category": "Geography",
+      "question": "What is the longest river in South America?",
+      "choices": [
+        "Amazon",
+        "Paraná",
+        "Orinoco",
+        "Magdalena"
+      ],
+      "answer": "A"
+    }
+  ]
+}

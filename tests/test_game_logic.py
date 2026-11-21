@@ -238,7 +238,7 @@ class TestR9CategorySelection(unittest.TestCase):
                          "Geography")
 
     def test_R9_invalid_selection_returns_none(self):
-        for text in ("", " ", "0", "5", "-1", "1.5", "Art", "Sci", "1 2"):
+        for text in ("", " ", "0", "5", "-1", "1.5", "Art", "Sci", "1 2", "\u00b2"):
             self.assertIsNone(game.parse_category(text, self.CATEGORIES),
                               repr(text))
 
