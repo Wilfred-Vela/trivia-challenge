@@ -11,10 +11,10 @@ from tests.helpers import sample_bank
 
 
 def q_item(category="Science", question="Q?", choices=("a", "b", "c", "d"),
-           answer="A"):
+           answer="A", difficulty="Easy"):
     """One question as it appears in the JSON file."""
-    return {"category": category, "question": question,
-            "choices": list(choices), "answer": answer}
+    return {"category": category, "difficulty": difficulty,
+            "question": question, "choices": list(choices), "answer": answer}
 
 
 def bank_data(*items, categories=("Science",)):
@@ -42,7 +42,7 @@ class TestR1LocalQuestions(unittest.TestCase):
             bank = game.load_bank(path)
         self.assertEqual(bank.categories, ["Science"])
         self.assertEqual(bank.questions,
-                         [Question("Q?", ["a", "b", "c", "d"], 3, "Science")])
+                         [Question("Q?", ["a", "b", "c", "d"], 3, "Science", "Easy")])
 
     def test_R1_missing_question_file_raises_clear_error(self):
         with self.assertRaises(QuestionFileError):
@@ -247,7 +247,7 @@ class TestR10OnlySelectedCategory(unittest.TestCase):
     def test_R10_questions_in_returns_only_that_category(self):
         bank = sample_bank()
         science = bank.questions_in("Science")
-        self.assertEqual(len(science), 3)
+        self.assertEqual(len(science), 4)
         self.assertTrue(all(q.category == "Science" for q in science))
         self.assertEqual([q.category for q in bank.questions_in("History")],
                          ["History"])
@@ -255,9 +255,9 @@ class TestR10OnlySelectedCategory(unittest.TestCase):
     def test_R10_questions_in_keeps_file_order_and_returns_a_copy(self):
         bank = sample_bank()
         science = bank.questions_in("Science")
-        self.assertEqual(science, bank.questions[:3])
+        self.assertEqual(science, bank.questions[:3] + bank.questions[4:])
         science.clear()
-        self.assertEqual(len(bank.questions_in("Science")), 3)
+        self.assertEqual(len(bank.questions_in("Science")), 4)
 
 
 class TestR11CategoryShown(unittest.TestCase):
@@ -282,6 +282,107 @@ class TestR12EmptyCategory(unittest.TestCase):
             game.no_questions_message("Sports"),
             "There are no questions in Sports yet. "
             "Please choose another category.")
+
+
+class TestR13DifficultyLevels(unittest.TestCase):
+    def test_R13_three_levels_in_order(self):
+        self.assertEqual(game.DIFFICULTIES, ("Easy", "Medium", "Hard"))
+
+    def test_R13_difficulty_menu_lists_levels_and_back_option(self):
+        lines = game.format_difficulty_menu("History").splitlines()
+        self.assertEqual(lines, ["Choose a difficulty for History:",
+                                 "  1) Easy", "  2) Medium", "  3) Hard",
+                                 "  4) Back to categories"])
+
+
+class TestR14DifficultySelection(unittest.TestCase):
+    def test_R14_prompt_and_error_text(self):
+        self.assertEqual(game.DIFFICULTY_PROMPT, "Difficulty (1-4): ")
+        self.assertEqual(game.DIFFICULTY_ERROR,
+                         "Please type a number from 1 to 4 or a difficulty name.")
+
+    def test_R14_number_selects_level_or_back(self):
+        for text, expected in (("1", "Easy"), ("2", "Medium"), (" 3 ", "Hard"),
+                               ("4", game.BACK)):
+            self.assertEqual(game.parse_difficulty(text), expected, repr(text))
+
+    def test_R14_name_selects_level_case_insensitively(self):
+        for text, expected in (("easy", "Easy"), (" MEDIUM ", "Medium"),
+                               ("Hard", "Hard"), ("back", game.BACK),
+                               ("BACK", game.BACK)):
+            self.assertEqual(game.parse_difficulty(text), expected, repr(text))
+
+    def test_R14_invalid_selection_returns_none(self):
+        for text in ("", " ", "0", "5", "-1", "1.5", "expert", "med", "e",
+                     "1 2", "\u00b2"):
+            self.assertIsNone(game.parse_difficulty(text), repr(text))
+
+    def test_R14_back_is_not_a_difficulty(self):
+        self.assertNotIn(game.BACK, game.DIFFICULTIES)
+
+
+class TestR15QuestionDifficulty(unittest.TestCase):
+    def test_R15_parse_bank_keeps_difficulty_on_each_question(self):
+        bank = game.parse_bank(bank_data(q_item(question="E?"),
+                                         q_item(question="H?", difficulty="Hard")))
+        self.assertEqual([(q.text, q.difficulty) for q in bank.questions],
+                         [("E?", "Easy"), ("H?", "Hard")])
+
+    def test_R15_question_without_difficulty_is_rejected(self):
+        item = q_item()
+        del item["difficulty"]
+        with self.assertRaisesRegex(QuestionFileError, "question 1: 'difficulty'"):
+            game.parse_bank(bank_data(item))
+
+    def test_R15_unknown_or_misspelt_difficulty_is_rejected(self):
+        for value in ("Expert", "easy", "EASY", " Easy", "", None, 1, ["Easy"]):
+            with self.assertRaises(QuestionFileError, msg=repr(value)):
+                game.parse_bank(bank_data(q_item(difficulty=value)))
+
+    def test_R15_every_bundled_question_has_a_difficulty(self):
+        for q in bundled_bank().questions:
+            self.assertIn(q.difficulty, game.DIFFICULTIES, q.text)
+
+
+class TestR16CategoryAndDifficultyFilter(unittest.TestCase):
+    def test_R16_questions_in_filters_by_category_and_difficulty(self):
+        bank = sample_bank()
+        self.assertEqual(bank.questions_in("Science", "Easy"),
+                         bank.questions[:3])
+        self.assertEqual([q.text for q in bank.questions_in("Science", "Medium")],
+                         ["What is the chemical symbol for sodium?"])
+        self.assertEqual(bank.questions_in("Science", "Hard"), [])
+        self.assertEqual(bank.questions_in("History", "Medium"), [])
+
+    def test_R16_filtered_list_is_a_copy(self):
+        bank = sample_bank()
+        bank.questions_in("Science", "Easy").clear()
+        self.assertEqual(len(bank.questions_in("Science", "Easy")), 3)
+
+    def test_R16_every_bundled_category_has_questions_at_every_difficulty(self):
+        bank = bundled_bank()
+        for name in bank.categories:
+            for level in game.DIFFICULTIES:
+                self.assertGreaterEqual(len(bank.questions_in(name, level)), 2,
+                                        f"{name} {level}")
+
+
+class TestR17DifficultyShown(unittest.TestCase):
+    def test_R17_question_header_includes_category_and_difficulty(self):
+        q = Question("Q?", ["a", "b", "c", "d"], 0, "Science", "Hard")
+        header = game.format_question(q, 2, 5).splitlines()[0]
+        self.assertEqual(header, "Question 2 of 5 \u2014 Science (Hard)")
+
+    def test_R17_round_banner_names_difficulty(self):
+        self.assertEqual(game.difficulty_banner("Medium"), "Difficulty: Medium")
+
+
+class TestR18NoQuestionsAtDifficulty(unittest.TestCase):
+    def test_R18_message_names_level_and_category_and_suggests_options(self):
+        self.assertEqual(
+            game.no_questions_at_difficulty_message("Sports", "Hard"),
+            "There are no Hard questions in Sports yet.\n"
+            "Please choose another difficulty or go back.")
 
 
 if __name__ == "__main__":
