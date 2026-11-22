@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from trivia import cli
+from trivia import cli, game
 from trivia.game import Question
 from tests.helpers import (Script, history_question, medium_science_question,
                            no_shuffle, sample_bank, sample_questions)
@@ -19,7 +19,8 @@ PACKAGE_DIR = os.path.join(PROJECT_ROOT, "trivia")
 # sample_bank() menu: 1) Science, 2) History, 3) Sports (no questions),
 # 4) High Scores (R23).
 SCIENCE, HISTORY, SPORTS, HIGH_SCORES = "1", "2", "3", "4"
-# Difficulty menu: 1) Easy, 2) Medium, 3) Hard, 4) Back to categories.
+# Difficulty menu: 1) Easy (1 point), 2) Medium (3 points), 3) Hard (5 points),
+# 4) Back to categories.
 EASY, MEDIUM, HARD, BACK = "1", "2", "3", "4"
 # Answers to the Science Easy questions (sample_questions()): B, C, A
 ALL_RIGHT = ("B", "C", "A")
@@ -345,8 +346,10 @@ class TestR12EmptyCategoryMessage(unittest.TestCase):
         self.assertIn("  3) Sports", script.text)
 
 
-DIFFICULTY_MENU = ("Choose a difficulty for Science:\n  1) Easy\n  2) Medium\n"
-                   "  3) Hard\n  4) Back to categories")
+# Changed in Round 6: each level shows its points (R27).
+DIFFICULTY_MENU = ("Choose a difficulty for Science:\n  1) Easy (1 point)\n"
+                   "  2) Medium (3 points)\n  3) Hard (5 points)\n"
+                   "  4) Back to categories")
 NO_HARD_SCIENCE = ("There are no Hard questions in Science yet.\n"
                    "Please choose another difficulty or go back.")
 
@@ -776,3 +779,75 @@ class TestR25CorruptedScoresFile(ScoresFileTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestR26PointsInFeedbackInGame(unittest.TestCase):
+    def test_R26_easy_correct_answers_show_plus_1_point(self):
+        script, _ = run_game(SCIENCE, EASY, "B", "A", "A", NAME, "n")
+        feedback = [line for line in script.output
+                    if line.startswith(("Correct!", "Incorrect."))]
+        self.assertEqual(feedback, ["Correct! +1 point",
+                                    "Incorrect. The correct answer was C) Mars.",
+                                    "Correct! +1 point"])
+
+    def test_R26_medium_correct_answer_shows_plus_3_points(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "D", NAME, "n")
+        self.assertIn("Correct! +3 points", script.output)
+
+    def test_R26_hard_correct_answer_shows_plus_5_points(self):
+        hard = [Question("Hard one?", ["W", "X", "Y", "Z"], 0, "Science", "Hard")]
+        script = Script("A")
+        cli.play_round(hard, "Science", "Hard", script.input_fn, script.output_fn)
+        self.assertIn("Correct! +5 points", script.output)
+
+    def test_R26_feedback_comes_before_running_score(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "D", NAME, "n")
+        i = script.output.index("Correct! +3 points")
+        self.assertEqual(script.output[i + 1], "Score: 3 points (1 of 1 correct)")
+
+
+class TestR27PointsInDifficultyMenuInGame(unittest.TestCase):
+    def test_R27_difficulty_menu_in_game_shows_points(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "D", NAME, "n")
+        self.assertIn(DIFFICULTY_MENU, script.output)
+        self.assertEqual(script.prompts[1], DIFFICULTY_PROMPT)
+
+
+def run_bundled_in_memory(*lines):
+    """Run the whole game on the bundled questions with scripted input and
+    in-memory high scores, in file order."""
+    script = Script(*lines)
+    cli.run(game.load_bank(game.DEFAULT_QUESTIONS_PATH), script.input_fn,
+            script.output_fn, shuffle=no_shuffle)
+    return script
+
+
+class TestR28LiteratureInGame(unittest.TestCase):
+    def test_R28_bundled_menu_lists_literature_before_high_scores(self):
+        script = run_bundled_in_memory()
+        self.assertIn("  4) Geography\n  5) Literature\n  6) High Scores",
+                      script.text)
+        self.assertEqual(script.prompts[0], "Category (1-6): ")
+
+    def test_R28_literature_can_be_chosen_by_number_or_name(self):
+        for choice in ("5", "literature"):
+            script = run_bundled_in_memory(choice, EASY)
+            self.assertIn("Category: Literature", script.output, choice)
+            self.assertIn("Question 1 of 2 \u2014 Literature (Easy)", script.text,
+                          choice)
+
+    def test_R28_literature_easy_round_asks_romeo_and_juliet(self):
+        script = run_bundled_in_memory("5", EASY)
+        self.assertIn("Who wrote 'Romeo and Juliet'?", script.text)
+
+    def test_R28_history_easy_round_no_longer_asks_romeo_and_juliet(self):
+        script = run_bundled_in_memory(HISTORY, EASY, "A", "A", NAME, "n")
+        self.assertIn("Category: History", script.output)
+        self.assertNotIn("Romeo and Juliet", script.text)
+
+    def test_R28_bundled_subprocess_menu_shows_literature(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run_bundled_game(os.path.join(tmp, "scores.json"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("  5) Literature", result.stdout)
+        self.assertIn("  6) High Scores", result.stdout)

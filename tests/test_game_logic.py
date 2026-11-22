@@ -103,7 +103,8 @@ class TestR3LetterSelection(unittest.TestCase):
 
 class TestR4CorrectnessFeedback(unittest.TestCase):
     def setUp(self):
-        self.q = Question("Red Planet?", ["Venus", "Jupiter", "Mars", "Saturn"], 2)
+        self.q = Question("Red Planet?", ["Venus", "Jupiter", "Mars", "Saturn"], 2,
+                          "Science", "Easy")
 
     def test_R4_is_correct_true_only_for_answer_index(self):
         self.assertTrue(game.is_correct(self.q, 2))
@@ -111,7 +112,8 @@ class TestR4CorrectnessFeedback(unittest.TestCase):
             self.assertFalse(game.is_correct(self.q, i))
 
     def test_R4_correct_answer_feedback_says_correct(self):
-        self.assertEqual(game.feedback(self.q, 2), "Correct!")
+        # Changed in Round 6: the points earned follow (R26).
+        self.assertEqual(game.feedback(self.q, 2), "Correct! +1 point")
 
     def test_R4_incorrect_answer_feedback_names_correct_option(self):
         self.assertEqual(game.feedback(self.q, 0),
@@ -205,9 +207,11 @@ class TestR7PlayAgainParsing(unittest.TestCase):
 
 
 class TestR8Categories(unittest.TestCase):
-    def test_R8_bundled_file_has_the_four_named_categories(self):
+    def test_R8_bundled_file_has_the_named_categories(self):
+        # Changed in Round 6: Literature was added (R28).
         self.assertEqual(bundled_bank().categories,
-                         ["Science", "History", "Sports", "Geography"])
+                         ["Science", "History", "Sports", "Geography",
+                          "Literature"])
 
     def test_R8_every_bundled_question_belongs_to_a_declared_category(self):
         bank = bundled_bank()
@@ -368,8 +372,10 @@ class TestR13DifficultyLevels(unittest.TestCase):
 
     def test_R13_difficulty_menu_lists_levels_and_back_option(self):
         lines = game.format_difficulty_menu("History").splitlines()
+        # Changed in Round 6: each level shows its points (R27).
         self.assertEqual(lines, ["Choose a difficulty for History:",
-                                 "  1) Easy", "  2) Medium", "  3) Hard",
+                                 "  1) Easy (1 point)", "  2) Medium (3 points)",
+                                 "  3) Hard (5 points)",
                                  "  4) Back to categories"])
 
 
@@ -465,3 +471,77 @@ class TestR18NoQuestionsAtDifficulty(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestR26PointsInFeedback(unittest.TestCase):
+    def test_R26_correct_easy_answer_shows_plus_1_point(self):
+        self.assertEqual(game.feedback(_q("Easy"), 0), "Correct! +1 point")
+
+    def test_R26_correct_medium_answer_shows_plus_3_points(self):
+        self.assertEqual(game.feedback(_q("Medium"), 0), "Correct! +3 points")
+
+    def test_R26_correct_hard_answer_shows_plus_5_points(self):
+        self.assertEqual(game.feedback(_q("Hard"), 0), "Correct! +5 points")
+
+    def test_R26_feedback_points_match_the_points_table(self):
+        for level in game.DIFFICULTIES:
+            text = game.feedback(_q(level), 0)
+            self.assertTrue(text.startswith(f"Correct! +{game.POINTS[level]} point"),
+                            text)
+
+    def test_R26_incorrect_answer_shows_no_points(self):
+        for level in game.DIFFICULTIES:
+            self.assertEqual(game.feedback(_q(level), 1),
+                             "Incorrect. The correct answer was A) W.")
+
+
+class TestR27PointsInDifficultyMenu(unittest.TestCase):
+    def test_R27_menu_shows_points_for_each_level(self):
+        lines = game.format_difficulty_menu("Science").splitlines()
+        self.assertEqual(lines[1:4], ["  1) Easy (1 point)",
+                                      "  2) Medium (3 points)",
+                                      "  3) Hard (5 points)"])
+
+    def test_R27_menu_points_match_the_points_table(self):
+        lines = game.format_difficulty_menu("Science").splitlines()
+        for line, level in zip(lines[1:], game.DIFFICULTIES):
+            self.assertIn(f"{level} ({game.POINTS[level]} point", line)
+
+    def test_R27_back_option_shows_no_points(self):
+        last = game.format_difficulty_menu("Science").splitlines()[-1]
+        self.assertEqual(last, "  4) Back to categories")
+
+    def test_R27_levels_still_chosen_by_number_or_plain_name(self):
+        self.assertEqual(game.parse_difficulty("1"), "Easy")
+        self.assertEqual(game.parse_difficulty(" medium "), "Medium")
+        self.assertEqual(game.parse_difficulty("HARD"), "Hard")
+
+
+ROMEO = "Who wrote 'Romeo and Juliet'?"
+
+
+class TestR28LiteratureCategory(unittest.TestCase):
+    def test_R28_bundled_file_declares_literature_last(self):
+        self.assertEqual(bundled_bank().categories[-1], "Literature")
+
+    def test_R28_romeo_and_juliet_is_in_literature_not_history(self):
+        bank = bundled_bank()
+        matches = [q for q in bank.questions if q.text == ROMEO]
+        self.assertEqual([(q.category, q.difficulty) for q in matches],
+                         [("Literature", "Easy")])
+        self.assertNotIn(ROMEO, [q.text for q in bank.questions_in("History")])
+
+    def test_R28_who_wrote_questions_are_all_in_literature(self):
+        for q in bundled_bank().questions:
+            if q.text.startswith("Who wrote"):
+                self.assertEqual(q.category, "Literature", q.text)
+
+    def test_R28_literature_has_two_questions_at_every_difficulty(self):
+        bank = bundled_bank()
+        for level in game.DIFFICULTIES:
+            self.assertGreaterEqual(len(bank.questions_in("Literature", level)),
+                                    2, level)
+
+    def test_R28_history_still_has_two_easy_questions(self):
+        self.assertGreaterEqual(
+            len(bundled_bank().questions_in("History", "Easy")), 2)
