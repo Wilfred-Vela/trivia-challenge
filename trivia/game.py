@@ -11,6 +11,8 @@ DIFFICULTIES = ("Easy", "Medium", "Hard")
 POINTS = {"Easy": 1, "Medium": 3, "Hard": 5}
 # Returned by parse_difficulty() for the menu's "Back to categories" option.
 BACK = "Back"
+# Returned by parse_category() for the category menu's last option (R23).
+HIGH_SCORES = "High Scores"
 DIFFICULTY_PROMPT = f"Difficulty (1-{len(DIFFICULTIES) + 1}): "
 DIFFICULTY_ERROR = (f"Please type a number from 1 to {len(DIFFICULTIES) + 1} "
                     "or a difficulty name.")
@@ -77,6 +79,9 @@ def _parse_categories(categories):
             "'categories' must be a non-empty array of non-empty strings")
     seen = set()
     for name in categories:
+        if name.lower() == HIGH_SCORES.lower():
+            raise QuestionFileError(
+                f"category '{name}' is reserved for the High Scores menu option")
         if name.lower() in seen:
             raise QuestionFileError(f"category '{name}' is listed more than once")
         seen.add(name.lower())
@@ -111,27 +116,31 @@ def _parse_question(n, item, categories):
 
 
 def format_category_menu(categories):
-    """The numbered list of categories shown before each round (R9)."""
+    """The numbered list of categories shown before each round (R9), with
+    High Scores as the last option (R23)."""
+    options = list(categories) + [HIGH_SCORES]
     lines = ["Choose a category:"]
-    lines += [f"  {n}) {name}" for n, name in enumerate(categories, start=1)]
+    lines += [f"  {n}) {name}" for n, name in enumerate(options, start=1)]
     return "\n".join(lines)
 
 
 def category_prompt(categories):
-    return f"Category (1-{len(categories)}): "
+    return f"Category (1-{len(categories) + 1}): "
 
 
 def category_error(categories):
-    return f"Please type a number from 1 to {len(categories)} or a category name."
+    return (f"Please type a number from 1 to {len(categories) + 1} "
+            "or a category name.")
 
 
 def parse_category(text, categories):
     """Map a typed menu number or name (case-insensitive) to a category name,
-    or None if it matches nothing."""
+    HIGH_SCORES for the last option, or None if it matches nothing."""
+    options = list(categories) + [HIGH_SCORES]
     reply = text.strip()
-    if reply.isascii() and reply.isdigit() and 1 <= int(reply) <= len(categories):
-        return categories[int(reply) - 1]
-    for name in categories:
+    if reply.isascii() and reply.isdigit() and 1 <= int(reply) <= len(options):
+        return options[int(reply) - 1]
+    for name in options:
         if reply.lower() == name.lower():
             return name
     return None
