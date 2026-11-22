@@ -6,8 +6,8 @@ Students and people who enjoy trivia often want a simple way to test their gener
 - R2: The game must display trivia questions with multiple-choice answers.
 - R3: The player must be able to select an answer by typing its letter (A, B, C, or D).
 - R4: The game must tell the player whether their answer is correct or incorrect.
-- R5: The game must keep track of the player's score.
-- R6: The game must display the final score when all questions have been answered.
+- R5: The game must keep track of the player's score. (Changed in Round 4; see Round 4 requirements.)
+- R6: The game must display the final score when all questions have been answered. (Changed in Round 4; see Round 4 requirements.)
 - R7: The player must be able to play again without restarting the program.
 
 # Round 2 requirements
@@ -24,3 +24,7 @@ Students and people who enjoy trivia often want a simple way to test their gener
 - R16: The game must only display questions matching both the selected category and difficulty level.
 - R17: The game must display the selected difficulty level during gameplay.
 - R18: If the selected category has no questions at the chosen difficulty level, the game must display a helpful message and allow the player to choose another difficulty level or category without crashing.
+
+# Round 4 requirements
+- R5 (changed in Round 4): A correct answer must earn points based on the question's difficulty: Easy 1 point, Medium 3 points, Hard 5 points. Previously, every correct answer was worth 1 point.
+- R6 (changed in Round 4): When all questions have been answered, the game must display the total points earned and the number of questions answered correctly, for example "Final score: 12 points (4 of 5 correct)." Previously, it displayed only the number of correct answers out of the number of questions.
