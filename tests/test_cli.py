@@ -7,6 +7,7 @@ import sys
 import unittest
 
 from trivia import cli
+from trivia.game import Question
 from tests.helpers import (Script, history_question, medium_science_question,
                            no_shuffle, sample_bank, sample_questions)
 
@@ -96,13 +97,13 @@ class TestR2DisplaysQuestions(unittest.TestCase):
 class TestR3TypedLetter(unittest.TestCase):
     def test_R3_lowercase_letters_are_accepted_in_game(self):
         script, _ = run_game(SCIENCE, EASY, "b", "c", "a", "n")
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
     def test_R3_invalid_letter_reprompts_same_question(self):
         script, _ = run_game(SCIENCE, EASY, "E", "", "B", "C", "A", "n")
         self.assertEqual(script.text.count("Please type A, B, C, or D."), 2)
         self.assertEqual(script.text.count("What is 2 + 2?"), 1)
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
 
 class TestR4Feedback(unittest.TestCase):
@@ -115,25 +116,75 @@ class TestR4Feedback(unittest.TestCase):
 class TestR5Score(unittest.TestCase):
     def test_R5_running_score_shown_after_each_answer(self):
         script, _ = run_game(SCIENCE, EASY, "B", "A", "A", "n")
-        for expected in ("Score: 1/1", "Score: 1/2", "Score: 2/3"):
-            self.assertIn(expected, script.text)
+        running = [line for line in script.output if line.startswith("Score:")]
+        self.assertEqual(running, ["Score: 1 point (1 of 1 correct)",
+                                   "Score: 1 point (1 of 2 correct)",
+                                   "Score: 2 points (2 of 3 correct)"])
+
+    def test_R5_wrong_first_answer_shows_zero_points(self):
+        script, _ = run_game(SCIENCE, EASY, "A", "C", "A", "n")
+        self.assertIn("Score: 0 points (0 of 1 correct)", script.output)
+
+    def test_R5_easy_correct_answer_earns_1_point(self):
+        script, _ = run_game(HISTORY, EASY, "B", "n")
+        self.assertIn("Score: 1 point (1 of 1 correct)", script.output)
+
+    def test_R5_medium_correct_answer_earns_3_points(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "D", "n")
+        self.assertIn("Score: 3 points (1 of 1 correct)", script.output)
+
+    def test_R5_hard_correct_answers_earn_5_points_each(self):
+        hard = [Question("Hard one?", ["W", "X", "Y", "Z"], 0, "Science", "Hard"),
+                Question("Hard two?", ["W", "X", "Y", "Z"], 1, "Science", "Hard")]
+        script = Script("A", "B")
+        cli.play_round(hard, "Science", "Hard", script.input_fn, script.output_fn)
+        self.assertIn("Score: 5 points (1 of 1 correct)", script.output)
+        self.assertIn("Score: 10 points (2 of 2 correct)", script.output)
+
+    def test_R5_incorrect_answer_earns_no_points(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "A", "n")
+        self.assertIn("Score: 0 points (0 of 1 correct)", script.output)
 
     def test_R5_play_round_returns_score(self):
         script = Script("A", "C", "D")
         score = cli.play_round(sample_questions(), "Science", "Easy",
                                script.input_fn, script.output_fn)
-        self.assertEqual((score.correct, score.answered), (1, 3))
+        self.assertEqual((score.points, score.correct, score.answered), (1, 1, 3))
+
+    def test_R5_play_again_resets_points(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "D", "y", SCIENCE, MEDIUM, "D", "n")
+        self.assertEqual(
+            script.output.count("Final score: 3 points (1 of 1 correct)."), 2)
+        self.assertNotIn("6 points", script.text)
 
 
 class TestR6FinalScoreShown(unittest.TestCase):
     def test_R6_final_score_shown_after_last_question(self):
         script, _ = run_game(SCIENCE, EASY, "A", "A", "A", "n")
         final = [i for i, line in enumerate(script.output)
-                 if line == "Final score: 1 out of 3."]
+                 if line == "Final score: 1 point (1 of 3 correct)."]
         last_feedback = max(i for i, line in enumerate(script.output)
                             if line.startswith(("Correct!", "Incorrect.")))
         self.assertEqual(len(final), 1)
         self.assertGreater(final[0], last_feedback)
+
+    def test_R6_final_score_shows_points_and_correct_count(self):
+        script, _ = run_game(SCIENCE, MEDIUM, "D", "n")
+        self.assertIn("Final score: 3 points (1 of 1 correct).", script.output)
+
+    def test_R6_final_score_with_no_correct_answers(self):
+        script, _ = run_game(SCIENCE, EASY, "A", "A", "B", "n")
+        self.assertIn("Final score: 0 points (0 of 3 correct).", script.output)
+
+    def test_R6_bundled_game_final_score_uses_points_format(self):
+        stdin = "1\n1\n" + "A\n" * 200 + "n\n"
+        result = subprocess.run(
+            [sys.executable, "-m", "trivia"], input=stdin, capture_output=True,
+            text=True, cwd=PROJECT_ROOT, timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(result.stdout,
+                         r"Final score: (1 point|\d+ points) \(\d+ of \d+ correct\)\.")
 
 
 class TestR7PlayAgain(unittest.TestCase):
@@ -141,8 +192,8 @@ class TestR7PlayAgain(unittest.TestCase):
         script, code = run_game(SCIENCE, EASY, *ALL_RIGHT, "y",
                                 SCIENCE, EASY, "A", "A", "A", "n")
         self.assertEqual(code, 0)
-        self.assertIn("Final score: 3 out of 3.", script.text)
-        self.assertIn("Final score: 1 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
+        self.assertIn("Final score: 1 point (1 of 3 correct).", script.text)
         self.assertEqual(script.text.count("What is 2 + 2?"), 2)
 
     def test_R7_no_exits(self):
@@ -175,7 +226,7 @@ class TestR7PlayAgain(unittest.TestCase):
         self.assertEqual(script.prompts.count(MENU_PROMPT), 2)
         self.assertEqual(script.text.count("Choose a category:"), 2)
         self.assertIn("Category: History", script.text)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 1 point (1 of 1 correct).", script.text)
 
 
 class TestR9ChooseCategory(unittest.TestCase):
@@ -191,7 +242,7 @@ class TestR9ChooseCategory(unittest.TestCase):
     def test_R9_category_can_be_chosen_by_name(self):
         script, _ = run_game("history", "easy", "B", "n")
         self.assertIn("Category: History", script.text)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 1 point (1 of 1 correct).", script.text)
 
     def test_R9_invalid_choice_reprompts_menu(self):
         script = Script("9", "Art", "", SCIENCE, EASY, *ALL_RIGHT, "n")
@@ -201,7 +252,7 @@ class TestR9ChooseCategory(unittest.TestCase):
             script.text.count("Please type a number from 1 to 3 or a category name."),
             3)
         self.assertEqual(script.prompts[:4], [MENU_PROMPT] * 4)
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
     def test_R9_choose_category_returns_selected_name(self):
         script = Script("x", "2")
@@ -219,12 +270,12 @@ class TestR10OnlySelectedCategoryAsked(unittest.TestCase):
         for q in sample_questions():
             self.assertNotIn(q.text, script.text)
         self.assertIn("Question 1 of 1", script.text)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 1 point (1 of 1 correct).", script.text)
 
     def test_R10_science_round_does_not_ask_history_question(self):
         script, _ = run_game(SCIENCE, EASY, *ALL_RIGHT, "n")
         self.assertNotIn(history_question().text, script.text)
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
     def test_R10_only_selected_questions_are_shuffled(self):
         shuffled = []
@@ -263,7 +314,7 @@ class TestR12EmptyCategoryMessage(unittest.TestCase):
         self.assertEqual(script.text.count("Choose a category:"), 2)
         self.assertNotIn("Category: Sports", script.text)
         self.assertNotIn("Choose a difficulty for Sports:", script.text)
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
     def test_R12_no_round_starts_for_empty_category(self):
         script = Script("sports")
@@ -308,7 +359,7 @@ class TestR14ChooseDifficulty(unittest.TestCase):
     def test_R14_difficulty_can_be_chosen_by_name(self):
         script, _ = run_game(SCIENCE, " MEDIUM ", "D", "n")
         self.assertIn("Difficulty: Medium", script.text)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 3 points (1 of 1 correct).", script.text)
 
     def test_R14_invalid_difficulty_reprompts(self):
         script, _ = run_game(SCIENCE, "0", "5", "expert", "", EASY,
@@ -316,7 +367,7 @@ class TestR14ChooseDifficulty(unittest.TestCase):
         self.assertEqual(script.text.count(
             "Please type a number from 1 to 4 or a difficulty name."), 4)
         self.assertEqual(script.prompts[1:6], [DIFFICULTY_PROMPT] * 5)
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
     def test_R14_back_returns_to_category_menu(self):
         script, _ = run_game(SCIENCE, BACK, HISTORY, EASY, "B", "n")
@@ -328,7 +379,7 @@ class TestR14ChooseDifficulty(unittest.TestCase):
     def test_R14_back_can_be_typed_by_name(self):
         script, _ = run_game(SCIENCE, "Back", HISTORY, EASY, "B", "n")
         self.assertEqual(script.text.count("Choose a category:"), 2)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 1 point (1 of 1 correct).", script.text)
 
     def test_R14_play_again_asks_category_then_difficulty(self):
         script, _ = run_game(SCIENCE, EASY, *ALL_RIGHT, "y",
@@ -390,7 +441,7 @@ class TestR18NoQuestionsAtDifficulty(unittest.TestCase):
         after = script.output.index(NO_HARD_SCIENCE)
         self.assertEqual(script.output[after + 2], DIFFICULTY_MENU)
         self.assertNotIn("Difficulty: Hard", script.text)
-        self.assertIn("Final score: 3 out of 3.", script.text)
+        self.assertIn("Final score: 3 points (3 of 3 correct).", script.text)
 
     def test_R18_player_can_go_back_and_pick_another_category(self):
         script, code = run_game(SCIENCE, HARD, BACK, HISTORY, EASY, "B", "n")
@@ -398,7 +449,7 @@ class TestR18NoQuestionsAtDifficulty(unittest.TestCase):
         self.assertIn(NO_HARD_SCIENCE, script.text)
         self.assertEqual(script.text.count("Choose a category:"), 2)
         self.assertIn("Category: History", script.text)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 1 point (1 of 1 correct).", script.text)
 
     def test_R18_no_round_starts_and_input_end_exits_cleanly(self):
         script, code = run_game(SCIENCE, "hard")
@@ -415,7 +466,7 @@ class TestR18NoQuestionsAtDifficulty(unittest.TestCase):
             "There are no Medium questions in History yet."), 2)
         self.assertEqual(script.text.count(
             "There are no Hard questions in History yet."), 1)
-        self.assertIn("Final score: 1 out of 1.", script.text)
+        self.assertIn("Final score: 1 point (1 of 1 correct).", script.text)
 
 
 if __name__ == "__main__":

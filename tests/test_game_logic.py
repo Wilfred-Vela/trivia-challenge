@@ -118,30 +118,76 @@ class TestR4CorrectnessFeedback(unittest.TestCase):
                          "Incorrect. The correct answer was C) Mars.")
 
 
+def _q(difficulty):
+    return Question("Q?", ["W", "X", "Y", "Z"], 0, "Science", difficulty)
+
+
 class TestR5ScoreTracking(unittest.TestCase):
+    def test_R5_points_per_difficulty_are_1_3_5(self):
+        self.assertEqual(game.POINTS, {"Easy": 1, "Medium": 3, "Hard": 5})
+
+    def test_R5_every_difficulty_has_a_point_value(self):
+        self.assertEqual(set(game.POINTS), set(game.DIFFICULTIES))
+
+    def test_R5_points_for_uses_question_difficulty(self):
+        for level, points in (("Easy", 1), ("Medium", 3), ("Hard", 5)):
+            self.assertEqual(game.points_for(_q(level)), points, level)
+
     def test_R5_new_score_starts_at_zero(self):
         s = Score()
-        self.assertEqual((s.correct, s.answered), (0, 0))
+        self.assertEqual((s.points, s.correct, s.answered), (0, 0, 0))
 
-    def test_R5_correct_answers_increase_score_incorrect_do_not(self):
+    def test_R5_correct_answer_adds_its_points_incorrect_adds_none(self):
         s = Score()
-        for result in (True, False, True, True, False):
-            s.record(result)
-        self.assertEqual((s.correct, s.answered), (3, 5))
+        s.record(True, 3)
+        s.record(False, 5)
+        self.assertEqual((s.points, s.correct, s.answered), (3, 1, 2))
+
+    def test_R5_points_accumulate_across_difficulties(self):
+        s = Score()
+        for level in ("Easy", "Medium", "Hard", "Hard"):
+            s.record(True, game.points_for(_q(level)))
+        self.assertEqual((s.points, s.correct, s.answered), (14, 4, 4))
 
     def test_R5_running_score_text(self):
         s = Score()
-        s.record(True)
-        s.record(False)
-        self.assertEqual(s.running_text(), "Score: 1/2")
+        s.record(True, 3)
+        s.record(False, 3)
+        self.assertEqual(s.running_text(), "Score: 3 points (1 of 2 correct)")
+
+    def test_R5_running_score_text_says_point_for_exactly_one(self):
+        s = Score()
+        s.record(True, 1)
+        self.assertEqual(s.running_text(), "Score: 1 point (1 of 1 correct)")
+
+    def test_R5_running_score_text_with_zero_points(self):
+        s = Score()
+        s.record(False, 1)
+        self.assertEqual(s.running_text(), "Score: 0 points (0 of 1 correct)")
 
 
 class TestR6FinalScore(unittest.TestCase):
-    def test_R6_final_score_message(self):
+    def test_R6_final_score_message_matches_problem_example(self):
         s = Score()
-        for result in (True, False, True):
-            s.record(result)
-        self.assertEqual(game.final_score_message(s), "Final score: 2 out of 3.")
+        for correct, points in ((True, 5), (True, 5), (False, 3),
+                                (True, 1), (True, 1)):
+            s.record(correct, points)
+        self.assertEqual(game.final_score_message(s),
+                         "Final score: 12 points (4 of 5 correct).")
+
+    def test_R6_final_score_message_says_point_for_exactly_one(self):
+        s = Score()
+        for correct in (True, False, False):
+            s.record(correct, 1)
+        self.assertEqual(game.final_score_message(s),
+                         "Final score: 1 point (1 of 3 correct).")
+
+    def test_R6_final_score_message_with_no_correct_answers(self):
+        s = Score()
+        s.record(False, 5)
+        s.record(False, 5)
+        self.assertEqual(game.final_score_message(s),
+                         "Final score: 0 points (0 of 2 correct).")
 
 
 class TestR7PlayAgainParsing(unittest.TestCase):
