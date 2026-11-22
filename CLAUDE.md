@@ -13,6 +13,15 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
   not in the question file (ADR 0003).
 - The points per level (`POINTS`: Easy 1, Medium 3, Hard 5) are also fixed in
   `trivia/game.py`, beside `DIFFICULTIES`; keep the two in step (ADR 0004).
+  Any text that shows point values (the difficulty menu, the correct-answer
+  feedback) must read them from `POINTS`, never write the numbers in by hand
+  (ADR 0007).
+- The bundled question file keeps at least two questions for every category
+  at every difficulty (tested under R16). If you move or remove a question,
+  add another so this stays true.
+- When rewriting `trivia/questions.json` with a script, write it with
+  `json.dumps(data, indent=2, ensure_ascii=False)` plus a trailing newline,
+  which is its current format, so the diff shows only real changes.
 - High scores live in `trivia/highscores.json` (or `--scores PATH`), written
   by the game and ignored by git; never commit it (format in `spec.md`,
   rationale in ADR 0005).
