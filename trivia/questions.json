@@ -3,7 +3,8 @@
     "Science",
     "History",
     "Sports",
-    "Geography"
+    "Geography",
+    "Literature"
   ],
   "questions": [
     {
@@ -81,14 +82,14 @@
     {
       "category": "History",
       "difficulty": "Easy",
-      "question": "Who wrote 'Romeo and Juliet'?",
+      "question": "In which country are the ancient Pyramids of Giza?",
       "choices": [
-        "Charles Dickens",
-        "Jane Austen",
-        "Mark Twain",
-        "William Shakespeare"
+        "Mexico",
+        "Egypt",
+        "Greece",
+        "Peru"
       ],
-      "answer": "D"
+      "answer": "B"
     },
     {
       "category": "History",
@@ -317,6 +318,78 @@
         "Finland"
       ],
       "answer": "C"
+    },
+    {
+      "category": "Literature",
+      "difficulty": "Easy",
+      "question": "Who wrote 'Romeo and Juliet'?",
+      "choices": [
+        "Charles Dickens",
+        "Jane Austen",
+        "Mark Twain",
+        "William Shakespeare"
+      ],
+      "answer": "D"
+    },
+    {
+      "category": "Literature",
+      "difficulty": "Easy",
+      "question": "In 'Alice's Adventures in Wonderland', what does Alice follow down the hole?",
+      "choices": [
+        "A black cat",
+        "A white rabbit",
+        "A talking dog",
+        "A pink flamingo"
+      ],
+      "answer": "B"
+    },
+    {
+      "category": "Literature",
+      "difficulty": "Medium",
+      "question": "Who wrote 'Pride and Prejudice'?",
+      "choices": [
+        "Jane Austen",
+        "Charlotte Brontë",
+        "Mary Shelley",
+        "George Eliot"
+      ],
+      "answer": "A"
+    },
+    {
+      "category": "Literature",
+      "difficulty": "Medium",
+      "question": "Who wrote the novel '1984'?",
+      "choices": [
+        "Aldous Huxley",
+        "Ray Bradbury",
+        "George Orwell",
+        "H. G. Wells"
+      ],
+      "answer": "C"
+    },
+    {
+      "category": "Literature",
+      "difficulty": "Hard",
+      "question": "Who wrote 'One Hundred Years of Solitude'?",
+      "choices": [
+        "Jorge Luis Borges",
+        "Pablo Neruda",
+        "Isabel Allende",
+        "Gabriel García Márquez"
+      ],
+      "answer": "D"
+    },
+    {
+      "category": "Literature",
+      "difficulty": "Hard",
+      "question": "In Dante's 'Divine Comedy', who guides Dante through Hell?",
+      "choices": [
+        "Homer",
+        "Virgil",
+        "Beatrice",
+        "Ovid"
+      ],
+      "answer": "B"
     }
   ]
 }
