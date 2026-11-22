@@ -17,6 +17,13 @@ A correct answer earns points by difficulty: Easy 1, Medium 3, Hard 5. The
 score shows your points and how many you got right, e.g.
 `Final score: 12 points (4 of 5 correct).`
 
+After each game you type your name, and your score is saved to a top-10
+high-score list (with the category and difficulty you played), which is then
+shown. You can also view it any time from the `High Scores` option at the end
+of the category menu. The list is stored in `trivia/highscores.json`; it is
+created on the first save, and if it gets damaged the game starts a fresh
+list and keeps the old file as `trivia/highscores.json.bak`.
+
 ## Run the game
 
 From the project root:
@@ -32,6 +39,12 @@ and give each question a difficulty, described in `spec.md`):
 python3 -m trivia --questions path/to/questions.json
 ```
 
+To keep high scores in a different file:
+
+```sh
+python3 -m trivia --scores path/to/highscores.json
+```
+
 ## Run the tests
 
 ```sh
@@ -40,6 +53,6 @@ python3 -m unittest discover tests
 
 ## Project docs
 
-- `problem.md` — problem statement and requirements R1–R18 (R5 and R6 changed in Round 4)
-- `spec.md` — detailed behaviour, question file format, design
+- `problem.md` — problem statement and requirements R1–R25 (R5 and R6 changed in Round 4)
+- `spec.md` — detailed behaviour, question and high-score file formats, design
 - `docs/decisions/` — architecture decision records
