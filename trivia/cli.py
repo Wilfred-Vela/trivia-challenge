@@ -59,7 +59,8 @@ def play_round(questions, category, difficulty, input_fn, output_fn):
         output_fn(game.format_question(question, number, total))
         choice = ask("Your answer (A-D): ", game.parse_choice,
                      "Please type A, B, C, or D.", input_fn, output_fn)
-        score.record(game.is_correct(question, choice))
+        score.record(game.is_correct(question, choice),
+                     game.points_for(question))
         output_fn(game.feedback(question, choice))
         output_fn(score.running_text())
     output_fn("")

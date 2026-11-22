@@ -7,6 +7,8 @@ from dataclasses import dataclass
 LETTERS = ("A", "B", "C", "D")
 # Fixed in the program, not declared in the question file (ADR 0003).
 DIFFICULTIES = ("Easy", "Medium", "Hard")
+# Points a correct answer earns at each difficulty (R5, ADR 0004).
+POINTS = {"Easy": 1, "Medium": 3, "Hard": 5}
 # Returned by parse_difficulty() for the menu's "Back to categories" option.
 BACK = "Back"
 DIFFICULTY_PROMPT = f"Difficulty (1-{len(DIFFICULTIES) + 1}): "
@@ -206,24 +208,39 @@ def feedback(question, choice_index):
     return f"Incorrect. The correct answer was {LETTERS[i]}) {question.choices[i]}."
 
 
+def points_for(question):
+    """The points a correct answer to ``question`` earns (R5)."""
+    return POINTS[question.difficulty]
+
+
+def _points_text(points):
+    return f"{points} point" if points == 1 else f"{points} points"
+
+
 class Score:
-    """Running tally for one round."""
+    """Running tally for one round: points earned, correct answers, and
+    questions answered."""
 
     def __init__(self):
+        self.points = 0
         self.correct = 0
         self.answered = 0
 
-    def record(self, was_correct):
+    def record(self, was_correct, points):
+        """Count one answer; a correct one adds ``points``."""
         self.answered += 1
         if was_correct:
             self.correct += 1
+            self.points += points
 
     def running_text(self):
-        return f"Score: {self.correct}/{self.answered}"
+        return (f"Score: {_points_text(self.points)} "
+                f"({self.correct} of {self.answered} correct)")
 
 
 def final_score_message(score):
-    return f"Final score: {score.correct} out of {score.answered}."
+    return (f"Final score: {_points_text(score.points)} "
+            f"({score.correct} of {score.answered} correct).")
 
 
 def parse_play_again(text):
