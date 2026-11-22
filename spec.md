@@ -5,7 +5,8 @@ A multiple-choice trivia game that runs in a terminal. Questions are read from
 a local JSON file, grouped into categories, and each has a difficulty level
 (Easy, Medium or Hard) that sets how many points a correct answer earns;
 the player picks a category and then a difficulty at
-the start of every game. After each game the player's name and points are
+the start of every game. The difficulty menu shows what each level is worth,
+and each correct answer shows the points it earned. After each game the player's name and points are
 saved to a local top-10 high-score list, which can also be viewed from the
 category menu. Built with the Python 3 standard library only.
 
@@ -20,17 +21,17 @@ whose name contains the ID (e.g. `test_R3_...`).
 | R1 | Runs in the terminal with one command; no internet, API key, account or paid service. | `python3 -m trivia` starts the game. Only standard-library modules are imported. Questions come from `trivia/questions.json`, read from disk. |
 | R2 | Displays trivia questions with multiple-choice answers. | Each question is shown with its number, its category and difficulty (see R11, R17), its text, and four options labelled `A)`–`D)`. |
 | R3 | Player selects an answer by typing its letter (A–D). | Input is trimmed and case-insensitive (`b`, ` B ` are accepted). Anything else (empty, `E`, `AB`, `1`) is rejected with a message and the same question is asked again. |
-| R4 | Tells the player whether the answer is correct or incorrect. | After each answer: `Correct!` or `Incorrect. The correct answer was C) <text>.` |
+| R4 | Tells the player whether the answer is correct or incorrect. | After each answer: `Correct! +<P> point(s)` (R26) or `Incorrect. The correct answer was C) <text>.` (Changed in Round 6: the correct line used to be just `Correct!`.) |
 | R5 | A correct answer earns points by the question's difficulty: Easy 1, Medium 3, Hard 5 (changed in Round 4; was 1 point each). | Each correct answer adds the points for that question's difficulty (Easy 1, Medium 3, Hard 5; fixed in the program, see ADR 0004); an incorrect answer adds 0. The score also counts correct answers and questions answered. After each answer the running score is shown as `Score: <P> points (<C> of <A> correct)`, e.g. `Score: 6 points (2 of 3 correct)` after three Medium answers with two right. `points` is `point` when P is exactly 1 (`Score: 1 point (1 of 2 correct)`); 0 is `0 points`. |
 | R6 | When all questions are answered, displays the total points and the number answered correctly (changed in Round 4; was correct out of total). | After the last question: `Final score: <P> points (<C> of <N> correct).`, e.g. `Final score: 12 points (4 of 5 correct).` N is the number of questions in the round. The same singular rule as R5 applies: `Final score: 1 point (1 of 3 correct).` |
 | R7 | Player can play again without restarting the program. | After the final score, the name prompt (R19) and the high-score list (R22), the game asks `Play again? (y/n)` (changed in Round 5: it used to follow the final score directly). `y`/`yes` returns to the category menu (R9), then the difficulty menu (R14), and starts a new round with the score reset to 0; `n`/`no` exits. Other input is rejected and the question repeated. |
-| R8 | Questions are organised into categories (e.g. Science, History, Sports, Geography). | The question file declares an ordered list of categories, and every question names exactly one of them (see *Question file format*). The bundled file has Science, History, Sports and Geography. |
+| R8 | Questions are organised into categories (e.g. Science, History, Sports, Geography). | The question file declares an ordered list of categories, and every question names exactly one of them (see *Question file format*). The bundled file has Science, History, Sports, Geography and Literature (changed in Round 6: Literature was added, see R28). |
 | R9 | Player selects a category before starting a game. | Before each round the game prints `Choose a category:` and the declared categories numbered `1)`, `2)`, … in file order, followed by one more line, `N+1) High Scores` (R23), then prompts `Category (1-M): `, where M = N+1. The player may type the number or the category name (trimmed, case-insensitive). Anything else is rejected with `Please type a number from 1 to M or a category name.` and the menu prompt is repeated. (Changed in Round 5: the `High Scores` line was added, so M used to be N.) |
 | R10 | Only questions in the selected category are displayed. | A round asks only questions of the selected category (narrowed further by difficulty, see R16). |
 | R11 | The selected category is displayed during gameplay. | The round starts with `Category: <name>`, and every question header reads `Question X of N — <name> (<difficulty>)` (the difficulty part is R17). |
 | R12 | Categories with no available questions get a helpful message. | Empty categories still appear in the menu. Choosing one prints `There are no questions in <name> yet. Please choose another category.` and the menu is shown again; no round starts and the score is not affected. This check happens before the difficulty menu, so a category with no questions at all never reaches it. |
 | R13 | Three difficulty levels: Easy, Medium, Hard. | The levels are fixed in the program (not declared in the question file) as `Easy`, `Medium`, `Hard`, in that order (see ADR 0003). |
-| R14 | Player selects a difficulty after the category and before the game starts. | After a category with questions is chosen, the game prints `Choose a difficulty for <category>:` followed by `1) Easy`, `2) Medium`, `3) Hard`, `4) Back to categories`, then prompts `Difficulty (1-4): `. The player may type the number or the name (`easy`, `medium`, `hard`, `back`; trimmed, case-insensitive). Anything else is rejected with `Please type a number from 1 to 4 or a difficulty name.` and the prompt is repeated. `4`/`back` shows the category menu again. |
+| R14 | Player selects a difficulty after the category and before the game starts. | After a category with questions is chosen, the game prints `Choose a difficulty for <category>:` followed by `1) Easy (1 point)`, `2) Medium (3 points)`, `3) Hard (5 points)` (R27), `4) Back to categories`, then prompts `Difficulty (1-4): `. The player may type the number or the name (`easy`, `medium`, `hard`, `back`; trimmed, case-insensitive). Anything else is rejected with `Please type a number from 1 to 4 or a difficulty name.` and the prompt is repeated. `4`/`back` shows the category menu again. (Changed in Round 6: the levels used to be listed without their points.) |
 | R15 | Every question has an assigned difficulty. | Every question in the file must have a `difficulty` field that is exactly `Easy`, `Medium` or `Hard`; a missing or different value makes the file malformed. |
 | R16 | Only questions matching both the selected category and difficulty are displayed. | A round asks every question with the selected category *and* difficulty once, in shuffled order, and no others. `Question X of N` counts only those questions. |
 | R17 | The selected difficulty is displayed during gameplay. | The `Category: <name>` banner is followed by `Difficulty: <level>`, and every question header ends with ` (<level>)`, e.g. `Question 2 of 5 — Science (Hard)`. |
@@ -42,13 +43,16 @@ whose name contains the ID (e.g. `test_R3_...`).
 | R23 | The player can view the list from a High Scores option in the menu. | The category menu's last option is `High Scores` (R9). Choosing it by number or by typing `high scores` (trimmed, case-insensitive) shows the list (R21) and then the category menu again; no round starts. A question file may not declare a category named `High Scores` (any case); it is reported as malformed. |
 | R24 | If the high-score file doesn't exist, start with an empty list and create the file at the first save. | A missing file is not an error and prints nothing: the list starts empty (`No high scores yet.`). The file is created when the first entry is saved. Its folder is not created; if it is missing, the save fails as in R19. |
 | R25 | If the high-score file is corrupted or can't be read, start with an empty list without crashing. | At start-up, after the welcome line, the game prints `High scores could not be read, so the list starts empty.` and the list starts empty. *Corrupted* means anything other than the format under *High-score file*. The bad file is left alone until the first save, which first renames it to `<file>.bak` (replacing any older `.bak`), then writes a fresh file. |
+| R26 | After a correct answer, the feedback shows the points earned (Round 6). | A correct answer prints `Correct! +<P> points`, where P is that question's points (R5): `Correct! +3 points` (Medium), `Correct! +5 points` (Hard), and `Correct! +1 point` (Easy; singular for exactly 1, like R5). An incorrect answer is unchanged (R4) and shows no points. The running score line (R5) still follows. |
+| R27 | The difficulty menu shows how many points each level is worth (Round 6). | Each level line ends with its points in brackets, from the same table that scores answers (R5, ADR 0007): `  1) Easy (1 point)`, `  2) Medium (3 points)`, `  3) Hard (5 points)`. `  4) Back to categories` has none. The prompt, the error message and typing a level by name (`easy`, not `easy (1 point)`) are unchanged. |
+| R28 | The bundled questions include a Literature category; literature questions are in Literature, not History (Round 6). | `trivia/questions.json` declares `Literature` last, after Geography, so the bundled menu is `1) Science` … `4) Geography`, `5) Literature`, `6) High Scores`, prompt `Category (1-6): `. "Who wrote 'Romeo and Juliet'?" moved from History (Easy) to Literature (Easy). Literature has two questions at each level; History gained one Easy question so it still has two at each level. No bundled question outside Literature is about literature. |
 
 ## Question file format
 `trivia/questions.json` is a JSON object with two keys:
 
 ```json
 {
-  "categories": ["Science", "History", "Sports", "Geography"],
+  "categories": ["Science", "History", "Sports", "Geography", "Literature"],
   "questions": [
     {
       "category": "Geography",
@@ -127,8 +131,9 @@ by hand, and is ignored by git. It is a JSON object (UTF-8):
   the question bank (`QuestionBank` = categories + questions), formatting the
   category and difficulty menus, parsing a category or difficulty choice,
   selecting a category's questions (optionally at one difficulty),
-  formatting a question, parsing a letter, checking an answer, the points
-  each difficulty is worth (`POINTS`), score tracking (points, correct,
+  formatting a question, parsing a letter, checking an answer and the
+  feedback line, the points each difficulty is worth (`POINTS`, which the
+  feedback (R26) and the difficulty menu (R27) also read), score tracking (points, correct,
   answered), parsing the play-again reply. The category menu's `High Scores`
   option is part of the category menu and parser (`game.HIGH_SCORES`).
 - `trivia/highscores.py` — high-score logic, also with no `input()`/`print()`:
