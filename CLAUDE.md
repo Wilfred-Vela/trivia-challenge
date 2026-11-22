@@ -13,6 +13,9 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
   not in the question file (ADR 0003).
 - The points per level (`POINTS`: Easy 1, Medium 3, Hard 5) are also fixed in
   `trivia/game.py`, beside `DIFFICULTIES`; keep the two in step (ADR 0004).
+- High scores live in `trivia/highscores.json` (or `--scores PATH`), written
+  by the game and ignored by git; never commit it (format in `spec.md`,
+  rationale in ADR 0005).
 
 ## Commands
 - Run the game: `python3 -m trivia`
@@ -20,6 +23,9 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
 
 ## Code layout
 - `trivia/game.py` — pure logic. No `input()` or `print()` here.
+- `trivia/highscores.py` — high-score logic and the high-score file (ranking,
+  name parsing, table formatting, load/save). Like `game.py`, no `input()` or
+  `print()`; file reads and writes are allowed.
 - `trivia/cli.py` — I/O and the game loop; takes injectable `input_fn`/`output_fn`.
 - `tests/` — `unittest` tests. Every test name includes the requirement ID it
   covers, e.g. `test_R4_incorrect_answer_shows_correct_option`.
@@ -29,9 +35,13 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
 ## Working rules
 - Keep logic separate from I/O so it can be tested without a terminal.
 - Scripted test input follows the prompt order (category, difficulty,
-  answers, play again). If you add, remove or reorder a prompt, update the
+  answers, name, play again). The category menu's last option is
+  `High Scores`, so its number is one more than the number of categories. If you add, remove or reorder a prompt, update the
   subprocess test's stdin in `tests/test_cli.py` and every `run_game(...)` /
   `Script(...)` call that drives a full game.
+- Tests must never read or write the real `trivia/highscores.json`. Pass a
+  temporary path (`scores_path=` to `cli.run()`, `--scores` to subprocess
+  runs) or leave `scores_path=None` to keep scores in memory.
 - When adding a requirement, add it to `spec.md` and add tests named with its ID.
 - When a round changes an existing requirement, keep its ID: rewrite its row
   in `spec.md` (noting the round it changed in), update its tests, and update
