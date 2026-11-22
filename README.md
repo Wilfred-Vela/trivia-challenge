@@ -13,6 +13,10 @@ answer (A, B, C, or D); the game tells you whether you were right, keeps a
 running score, shows your final score at the end, and asks if you want to play
 again (you choose a category and difficulty again for the next game).
 
+A correct answer earns points by difficulty: Easy 1, Medium 3, Hard 5. The
+score shows your points and how many you got right, e.g.
+`Final score: 12 points (4 of 5 correct).`
+
 ## Run the game
 
 From the project root:
@@ -36,6 +40,6 @@ python3 -m unittest discover tests
 
 ## Project docs
 
-- `problem.md` — problem statement and requirements R1–R18
+- `problem.md` — problem statement and requirements R1–R18 (R5 and R6 changed in Round 4)
 - `spec.md` — detailed behaviour, question file format, design
 - `docs/decisions/` — architecture decision records
