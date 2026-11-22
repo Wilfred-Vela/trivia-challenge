@@ -11,6 +11,8 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
   difficulty (format in `spec.md`, rationale in ADRs 0002 and 0003).
 - The difficulty levels (Easy, Medium, Hard) are fixed in `trivia/game.py`,
   not in the question file (ADR 0003).
+- The points per level (`POINTS`: Easy 1, Medium 3, Hard 5) are also fixed in
+  `trivia/game.py`, beside `DIFFICULTIES`; keep the two in step (ADR 0004).
 
 ## Commands
 - Run the game: `python3 -m trivia`
@@ -31,7 +33,12 @@ Terminal multiple-choice trivia game. See `problem.md` (requirements R1, R2, …
   subprocess test's stdin in `tests/test_cli.py` and every `run_game(...)` /
   `Script(...)` call that drives a full game.
 - When adding a requirement, add it to `spec.md` and add tests named with its ID.
+- When a round changes an existing requirement, keep its ID: rewrite its row
+  in `spec.md` (noting the round it changed in), update its tests, and update
+  any earlier-round test that asserted the old behaviour.
 - Commit in small steps; messages say what changed and why.
+- A tests-first commit may fail the suite; say so in its message and list it
+  in the handoff's warnings so nobody "fixes" it later.
 - If a requirement is unclear, ask the owner before writing code.
 - `spec.md` fixes the exact on-screen wording, and the tests assert it
   exactly. If you change wording or behaviour, update `spec.md` and every
