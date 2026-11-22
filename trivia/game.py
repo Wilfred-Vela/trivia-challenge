@@ -156,9 +156,10 @@ def no_questions_message(category):
 
 
 def format_difficulty_menu(category):
-    """The numbered difficulty list, plus a way back, shown after a category
-    is chosen (R13, R14)."""
-    options = list(DIFFICULTIES) + ["Back to categories"]
+    """The numbered difficulty list, each level with its points (R27), plus a
+    way back, shown after a category is chosen (R13, R14)."""
+    options = [f"{level} ({_points_text(POINTS[level])})"
+               for level in DIFFICULTIES] + ["Back to categories"]
     lines = [f"Choose a difficulty for {category}:"]
     lines += [f"  {n}) {name}" for n, name in enumerate(options, start=1)]
     return "\n".join(lines)
@@ -211,8 +212,10 @@ def is_correct(question, choice_index):
 
 
 def feedback(question, choice_index):
+    """The line shown after an answer (R4). A correct one names the points it
+    earned (R26), so ``question`` needs a difficulty."""
     if is_correct(question, choice_index):
-        return "Correct!"
+        return f"Correct! +{_points_text(points_for(question))}"
     i = question.answer_index
     return f"Incorrect. The correct answer was {LETTERS[i]}) {question.choices[i]}."
 
