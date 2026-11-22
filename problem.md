@@ -8,11 +8,11 @@ Students and people who enjoy trivia often want a simple way to test their gener
 - R4: The game must tell the player whether their answer is correct or incorrect.
 - R5: The game must keep track of the player's score. (Changed in Round 4; see Round 4 requirements.)
 - R6: The game must display the final score when all questions have been answered. (Changed in Round 4; see Round 4 requirements.)
-- R7: The player must be able to play again without restarting the program.
+- R7: The player must be able to play again without restarting the program. (Changed in Round 5: the player enters a name and sees the high-score list before the play-again prompt; see R19 and R22.)
 
 # Round 2 requirements
 - R8: The game must organize trivia questions into categories, such as Science, History, Sports, and Geography.
-- R9: The player must be able to select a category before starting a game.
+- R9: The player must be able to select a category before starting a game. (Changed in Round 5: the category menu also offers a High Scores option; see R23.)
 - R10: The game must only display questions belonging to the selected category.
 - R11: The game must display the selected category during gameplay.
 - R12: The game must handle categories that have no available questions by displaying a helpful message.
