@@ -2,3 +2,6 @@
 __pycache__/
 *.jsonl
 node_modules/
+trivia/highscores.json
+trivia/highscores.json.bak
+trivia/highscores.json.tmp
