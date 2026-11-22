@@ -28,3 +28,12 @@ Students and people who enjoy trivia often want a simple way to test their gener
 # Round 4 requirements
 - R5 (changed in Round 4): A correct answer must earn points based on the question's difficulty: Easy 1 point, Medium 3 points, Hard 5 points. Previously, every correct answer was worth 1 point.
 - R6 (changed in Round 4): When all questions have been answered, the game must display the total points earned and the number of questions answered correctly, for example "Final score: 12 points (4 of 5 correct)." Previously, it displayed only the number of correct answers out of the number of questions.
+
+# Round 5 requirements
+- R19: After each completed game, the game must ask for the player's name and save a high-score entry containing the name, total points earned, category, and difficulty level to a file.
+- R20: The high-score list must keep only the top 10 scores.
+- R21: The high-score list must be displayed from highest to lowest score.
+- R22: The high-score list must be shown automatically after each completed game.
+- R23: The player must be able to view the high-score list from a High Scores option in the menu.
+- R24: If the high-score file does not exist, the game must start with an empty high-score list and create the file when the first score is saved.
+- R25: If the high-score file is corrupted or cannot be read, the game must start with an empty high-score list without crashing.
