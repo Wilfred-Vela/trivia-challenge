@@ -3,7 +3,8 @@
 ## Overview
 A multiple-choice trivia game that runs in a terminal. Questions are read from
 a local JSON file, grouped into categories, and each has a difficulty level
-(Easy, Medium or Hard); the player picks a category and then a difficulty at
+(Easy, Medium or Hard) that sets how many points a correct answer earns;
+the player picks a category and then a difficulty at
 the start of every game. Built with the Python 3 standard library only.
 
 Run: `python3 -m trivia`
@@ -18,8 +19,8 @@ whose name contains the ID (e.g. `test_R3_...`).
 | R2 | Displays trivia questions with multiple-choice answers. | Each question is shown with its number, its category and difficulty (see R11, R17), its text, and four options labelled `A)`–`D)`. |
 | R3 | Player selects an answer by typing its letter (A–D). | Input is trimmed and case-insensitive (`b`, ` B ` are accepted). Anything else (empty, `E`, `AB`, `1`) is rejected with a message and the same question is asked again. |
 | R4 | Tells the player whether the answer is correct or incorrect. | After each answer: `Correct!` or `Incorrect. The correct answer was C) <text>.` |
-| R5 | Keeps track of the player's score. | One point per correct answer; the running score is shown after each answer (`Score: 2/3`). |
-| R6 | Displays the final score when all questions are answered. | After the last question: `Final score: X out of N.` |
+| R5 | A correct answer earns points by the question's difficulty: Easy 1, Medium 3, Hard 5 (changed in Round 4; was 1 point each). | Each correct answer adds the points for that question's difficulty (Easy 1, Medium 3, Hard 5; fixed in the program, see ADR 0004); an incorrect answer adds 0. The score also counts correct answers and questions answered. After each answer the running score is shown as `Score: <P> points (<C> of <A> correct)`, e.g. `Score: 6 points (2 of 3 correct)` after three Medium answers with two right. `points` is `point` when P is exactly 1 (`Score: 1 point (1 of 2 correct)`); 0 is `0 points`. |
+| R6 | When all questions are answered, displays the total points and the number answered correctly (changed in Round 4; was correct out of total). | After the last question: `Final score: <P> points (<C> of <N> correct).`, e.g. `Final score: 12 points (4 of 5 correct).` N is the number of questions in the round. The same singular rule as R5 applies: `Final score: 1 point (1 of 3 correct).` |
 | R7 | Player can play again without restarting the program. | After the final score the game asks `Play again? (y/n)`. `y`/`yes` returns to the category menu (R9), then the difficulty menu (R14), and starts a new round with the score reset to 0; `n`/`no` exits. Other input is rejected and the question repeated. |
 | R8 | Questions are organised into categories (e.g. Science, History, Sports, Geography). | The question file declares an ordered list of categories, and every question names exactly one of them (see *Question file format*). The bundled file has Science, History, Sports and Geography. |
 | R9 | Player selects a category before starting a game. | Before each round the game prints `Choose a category:` and the declared categories numbered `1)`, `2)`, … in file order, then prompts `Category (1-N): `. The player may type the number or the category name (trimmed, case-insensitive). Anything else is rejected with `Please type a number from 1 to N or a category name.` and the menu prompt is repeated. |
@@ -83,8 +84,9 @@ A malformed file causes a clear error message and a non-zero exit, not a traceba
   the question bank (`QuestionBank` = categories + questions), formatting the
   category and difficulty menus, parsing a category or difficulty choice,
   selecting a category's questions (optionally at one difficulty),
-  formatting a question, parsing a letter, checking an answer, score
-  tracking, parsing the play-again reply.
+  formatting a question, parsing a letter, checking an answer, the points
+  each difficulty is worth (`POINTS`), score tracking (points, correct,
+  answered), parsing the play-again reply.
 - `trivia/cli.py` — the game loop: category menu, then difficulty menu
   (which can go back to categories), then a round, then play again. Takes `input_fn` and `output_fn` parameters (defaulting to `input`
   and `print`) so tests can drive it with scripted input.
@@ -92,5 +94,5 @@ A malformed file causes a clear error message and a non-zero exit, not a traceba
 
 ## Out of scope (this build)
 An "all categories" mixed mode, choosing more than one category per game,
-an "any difficulty" mixed mode, levels other than Easy/Medium/Hard, scoring
-that depends on difficulty, timers, high-score persistence, network question sources.
+an "any difficulty" mixed mode, levels other than Easy/Medium/Hard, point values set
+in the question file or per question, bonus points (e.g. streaks or speed), timers, high-score persistence, network question sources.
