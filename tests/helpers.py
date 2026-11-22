@@ -44,15 +44,20 @@ class Script:
         self._lines = list(lines)
         self.output = []
         self.prompts = []
+        # Prompts and output in the order they happened, as ("prompt", text)
+        # and ("output", text) pairs.
+        self.transcript = []
 
     def input_fn(self, prompt=""):
         self.prompts.append(prompt)
+        self.transcript.append(("prompt", prompt))
         if not self._lines:
             raise EOFError
         return self._lines.pop(0)
 
     def output_fn(self, text=""):
         self.output.append(str(text))
+        self.transcript.append(("output", str(text)))
 
     @property
     def text(self):

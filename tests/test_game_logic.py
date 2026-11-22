@@ -265,13 +265,15 @@ class TestR9CategorySelection(unittest.TestCase):
         lines = menu.splitlines()
         self.assertEqual(lines[0], "Choose a category:")
         self.assertEqual(lines[1:], ["  1) Science", "  2) History",
-                                     "  3) Sports", "  4) Geography"])
+                                     "  3) Sports", "  4) Geography",
+                                     "  5) High Scores"])
 
     def test_R9_prompt_and_error_mention_the_number_range(self):
+        # The range includes the High Scores option (R23).
         self.assertEqual(game.category_prompt(self.CATEGORIES),
-                         "Category (1-4): ")
+                         "Category (1-5): ")
         self.assertEqual(game.category_error(self.CATEGORIES),
-                         "Please type a number from 1 to 4 or a category name.")
+                         "Please type a number from 1 to 5 or a category name.")
 
     def test_R9_number_selects_category(self):
         for n, name in enumerate(self.CATEGORIES, start=1):
@@ -284,9 +286,39 @@ class TestR9CategorySelection(unittest.TestCase):
                          "Geography")
 
     def test_R9_invalid_selection_returns_none(self):
-        for text in ("", " ", "0", "5", "-1", "1.5", "Art", "Sci", "1 2", "\u00b2"):
+        for text in ("", " ", "0", "6", "-1", "1.5", "Art", "Sci", "1 2", "\u00b2",
+                     "High", "highscores"):
             self.assertIsNone(game.parse_category(text, self.CATEGORIES),
                               repr(text))
+
+
+class TestR23HighScoresMenuOption(unittest.TestCase):
+    CATEGORIES = ["Science", "History"]
+
+    def test_R23_menu_ends_with_high_scores_option(self):
+        lines = game.format_category_menu(self.CATEGORIES).splitlines()
+        self.assertEqual(lines[-1], "  3) High Scores")
+
+    def test_R23_number_after_categories_selects_high_scores(self):
+        self.assertEqual(game.parse_category("3", self.CATEGORIES),
+                         game.HIGH_SCORES)
+
+    def test_R23_high_scores_can_be_typed_by_name(self):
+        for text in ("High Scores", "  high scores ", "HIGH SCORES"):
+            self.assertEqual(game.parse_category(text, self.CATEGORIES),
+                             game.HIGH_SCORES, repr(text))
+
+    def test_R23_high_scores_is_not_a_category(self):
+        self.assertNotIn(game.HIGH_SCORES, self.CATEGORIES)
+        for name in self.CATEGORIES:
+            self.assertNotEqual(game.parse_category(name, self.CATEGORIES),
+                                game.HIGH_SCORES)
+
+    def test_R23_category_named_high_scores_is_rejected(self):
+        for name in ("High Scores", "high scores"):
+            with self.assertRaisesRegex(QuestionFileError, "reserved"):
+                game.parse_bank(bank_data(q_item(),
+                                          categories=("Science", name)))
 
 
 class TestR10OnlySelectedCategory(unittest.TestCase):
