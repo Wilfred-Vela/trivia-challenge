@@ -15,7 +15,7 @@ we decided for **a JSON object `{"scores": [...]}` in which every entry is
 fully validated on load; any invalid entry makes the whole file count as
 corrupted (empty list, one notice, the file renamed to `.bak` on the first
 save); and every save writes `<file>.tmp` and renames it over the file with
-`os.replace`, all in a new I/O-free-of-terminal module
+`os.replace`, all in a new module with no `input()`/`print()`,
 `trivia/highscores.py`**,
 and neglected **(a) CSV or one-line-per-entry text, (b) `shelve`/`pickle` or
 `sqlite3`, (c) keeping the valid entries and skipping only the bad ones, and
