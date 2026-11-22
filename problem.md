@@ -37,3 +37,8 @@ Students and people who enjoy trivia often want a simple way to test their gener
 - R23: The player must be able to view the high-score list from a High Scores option in the menu.
 - R24: If the high-score file does not exist, the game must start with an empty high-score list and create the file when the first score is saved.
 - R25: If the high-score file is corrupted or cannot be read, the game must start with an empty high-score list without crashing.
+
+# Round 6 requirements
+- R26: After a correct answer, the feedback must show how many points were earned, for example "Correct! +3 points".
+- R27: The difficulty menu must show how many points each level is worth, for example "1) Easy (1 point)".
+- R28: The bundled questions must include a Literature category, and literature questions such as "Who wrote Romeo and Juliet?" must be in Literature, not History.
